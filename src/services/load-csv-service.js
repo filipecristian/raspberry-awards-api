@@ -76,8 +76,6 @@ function validate(movie) {
         validate = false;
     }
 
-    console.log('AAAAAA', typeof movie.producer, movie.producer);
-
     if (typeof movie.producer !== 'string') {
         validate = false;
     }
@@ -86,7 +84,7 @@ function validate(movie) {
 }
 
 function isPositiveInteger(value) {
-    return /^\d+$/.test(value);
+    return /^[1-9]\d*$/.test(value);
 }
 
 module.exports = { importFile };

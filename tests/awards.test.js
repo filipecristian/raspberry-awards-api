@@ -191,4 +191,13 @@ describe('Integration tests - /awards/intervals', () => {
     }
   });
 
+  it('should reject with false if csv field year was less than 0', async () => {
+    expect.assertions(1);
+    try {
+      await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'unformatted_5.csv'));
+    } catch(e) {
+      expect(e).toBe(false);
+    }
+  });
+
 });
