@@ -1,12 +1,17 @@
 const request = require('supertest');
 const app = require('../src/app');
 const path = require('path');
+const loadCSVService = require('../src/services/load-csv-service');
+const migrationCreateProducerMovie = require('../migrations/create-producer-movie');
 
-describe('Testes de Integração - /awards/intervals', () => {
+describe('Integration tests - /awards/intervals', () => {
 
-  it('deve retornar 1 produtor com menor intervalo e 1 produtor com maior intervalo ', async () => {
-    const loadCSV = require('../src/loadCSV');
-    await loadCSV.loadCSV(path.join(__dirname, '/mock-csvs/', 'case_1.csv'));;
+  beforeEach(async () => {
+    await migrationCreateProducerMovie.run();
+  });
+
+  it('should return 1 producer with the smallest interval and 1 producer with the largest interval ', async () => {
+    await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'case_1.csv'));
 
     const res = await request(app).get('/awards/intervals');
     
@@ -29,9 +34,8 @@ describe('Testes de Integração - /awards/intervals', () => {
     expect(res.body.max[0].followingWin).toBe(2010);
   });
 
-  it('deve retornar 3 produtores com menor intervalo e 3 produtores com maior intervalo (sortidos)', async () => {
-    const loadCSV = require('../src/loadCSV');
-    await loadCSV.loadCSV(path.join(__dirname, '/mock-csvs/', 'case_2.csv'));;
+  it('should return 3 producers with the smallest interval and 3 producers with the largest interval (assorted)', async () => {
+    await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'case_2.csv'));;
 
     const res = await request(app).get('/awards/intervals');
     
@@ -74,6 +78,117 @@ describe('Testes de Integração - /awards/intervals', () => {
     expect(res.body.max[2].interval).toBe(10);
     expect(res.body.max[2].previousWin).toBe(2000);
     expect(res.body.max[2].followingWin).toBe(2010);
+  });
+
+  it('should return 2 producers with the smallest interval and 2 producers with the largest interval (assorted)', async () => {
+    await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'case_3.csv'));;
+
+    const res = await request(app).get('/awards/intervals');
+    
+    expect(res.statusCode).toBe(200);
+
+    expect(res.body).toHaveProperty('min');
+    expect(res.body).toHaveProperty('max');
+
+    expect(res.body.min.length).toBe(2);
+
+    expect(res.body.min[0].producer).toBe('Joel Silver');
+    expect(res.body.min[0].interval).toBe(1);
+    expect(res.body.min[0].previousWin).toBe(1989);
+    expect(res.body.min[0].followingWin).toBe(1991);
+
+    expect(res.body.min[1].producer).toBe('Matthew Vaughn');
+    expect(res.body.min[1].interval).toBe(1);
+    expect(res.body.min[1].previousWin).toBe(2002);
+    expect(res.body.min[1].followingWin).toBe(2003);
+
+    expect(res.body.max.length).toBe(2);
+
+    expect(res.body.max[0].producer).toBe('Matthew Vaughn');
+    expect(res.body.max[0].interval).toBe(22);
+    expect(res.body.max[0].previousWin).toBe(1980);
+    expect(res.body.max[0].followingWin).toBe(2002);
+
+    expect(res.body.max[1].producer).toBe('Matthew Vaughn');
+    expect(res.body.max[1].interval).toBe(22);
+    expect(res.body.max[1].previousWin).toBe(2015);
+    expect(res.body.max[1].followingWin).toBe(2037);
+  });
+
+  it('should return 2 producers with the smallest interval and 2 producers with the largest interval (assorted)', async () => {
+    await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'case_3.csv'));;
+
+    const res = await request(app).get('/awards/intervals');
+    
+    expect(res.statusCode).toBe(200);
+
+    expect(res.body).toHaveProperty('min');
+    expect(res.body).toHaveProperty('max');
+
+    expect(res.body.min.length).toBe(2);
+
+    expect(res.body.min[0].producer).toBe('Joel Silver');
+    expect(res.body.min[0].interval).toBe(1);
+    expect(res.body.min[0].previousWin).toBe(1989);
+    expect(res.body.min[0].followingWin).toBe(1991);
+
+    expect(res.body.min[1].producer).toBe('Matthew Vaughn');
+    expect(res.body.min[1].interval).toBe(1);
+    expect(res.body.min[1].previousWin).toBe(2002);
+    expect(res.body.min[1].followingWin).toBe(2003);
+
+    expect(res.body.max.length).toBe(2);
+
+    expect(res.body.max[0].producer).toBe('Matthew Vaughn');
+    expect(res.body.max[0].interval).toBe(22);
+    expect(res.body.max[0].previousWin).toBe(1980);
+    expect(res.body.max[0].followingWin).toBe(2002);
+
+    expect(res.body.max[1].producer).toBe('Matthew Vaughn');
+    expect(res.body.max[1].interval).toBe(22);
+    expect(res.body.max[1].previousWin).toBe(2015);
+    expect(res.body.max[1].followingWin).toBe(2037);
+  });
+
+  it('should reject with false if csv field year was different from integer', async () => {
+    expect.assertions(1);
+    try {
+      await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'unformatted_1.csv'));
+    } catch(e) {
+      expect(e).toBe(false);
+    }
+  });
+
+  it('should reject with false if csv field producers was different from string', async () => {
+    expect.assertions(1);
+    try {
+      await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'unformatted_2.csv'));
+    } catch(e) {
+      expect(e).toBe(false);
+    }
+  });
+
+  it('should reject with false if csv field winner was different from yes', async () => {
+    expect.assertions(1);
+    try {
+      await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'unformatted_3.csv'));
+    } catch(e) {
+      expect(e).toBe(false);
+    }
+  });
+
+  it('should import if csv field winner was empty', async () => {
+    let result = await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'case_4.csv'));
+    expect(result).toBe(true);
+  });
+
+  it('should reject with false if csv field year was 0', async () => {
+    expect.assertions(1);
+    try {
+      await loadCSVService.importFile(path.join(__dirname, '/mock-csvs/', 'unformatted_4.csv'));
+    } catch(e) {
+      expect(e).toBe(false);
+    }
   });
 
 });

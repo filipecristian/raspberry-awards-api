@@ -1,16 +1,10 @@
 const express = require('express');
-const loadCSV = require('../loadCSV');
-const producersFormatter = require('../producersFormatter');
+const winnersSearchService = require('../services/winners-search-service');
 const router = express.Router();
 
-// Aqui vamos montar a lógica depois
 router.get('/intervals', (req, res) => {
-  loadCSV.getProducersWithMultipleWins()
-    .then(
-      (producers) => {
-        const result = producersFormatter.organizeProducers(producers);
-        res.json(result);
-    });
+  winnersSearchService.findMaxAndMinWinners()
+    .then((data) => res.json(data));
 });
 
 module.exports = router;
